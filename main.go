@@ -12,6 +12,8 @@ import (
 
 var addr = flag.String("addr", ":8080", "http service address")
 
+var listRoom = []string{}
+
 func serveHome(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
 	if r.URL.Path != "/" {

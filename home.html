@@ -30,7 +30,7 @@ window.onload = function () {
 
     if (window["WebSocket"]) {
         let room = Math.round(Math.random() * 1000);
-        room = 6969;
+        //room = 6969;
         conn = new WebSocket("ws://" + document.location.host + "/ws?room="+room);
         conn.onclose = function (evt) {
             var item = document.createElement("div");
@@ -38,6 +38,7 @@ window.onload = function () {
             appendLog(item);
         };
         conn.onmessage = function (evt) {
+            console.log(evt);
             var messages = evt.data.split('\n');
             for (var i = 0; i < messages.length; i++) {
                 var item = document.createElement("div");

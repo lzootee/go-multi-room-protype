@@ -1,10 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type message struct {
 	data []byte
 	room string
+	name int
 }
 
 type subscription struct {
@@ -35,12 +38,32 @@ var h = hub{
 	rooms:      make(map[string]map[*connection]bool),
 }
 
+func removeValue(s []string, value string) []string {
+	var index = -1
+	for i, element := range listRoom {
+		if element == value {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return s
+	} else {
+		s[index] = s[len(s)-1]
+		return s[:len(s)-1]
+	}
+
+}
+
 func (h *hub) run() {
 	for {
 		select {
 		case s := <-h.register:
 			connections := h.rooms[s.room]
+
+			listRoom = append(listRoom, s.room)
 			fmt.Println("room join:" + s.room)
+
 			if connections == nil {
 				connections = make(map[*connection]bool)
 				h.rooms[s.room] = connections
@@ -55,13 +78,12 @@ func (h *hub) run() {
 					close(s.conn.send)
 					if len(connections) == 0 {
 						delete(h.rooms, s.room)
+						listRoom = removeValue(listRoom, s.room)
 					}
 				}
 			}
 		case m := <-h.broadcast:
 			connections := h.rooms[m.room]
-			fmt.Println("room msg coming")
-			fmt.Println("room msg:" + m.room)
 			for c := range connections {
 				select {
 				case c.send <- m.data:
