@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -35,6 +34,8 @@ type connection struct {
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+
+	id string
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -55,9 +56,10 @@ func (s subscription) readPump() {
 			}
 			break
 		}
-		fmt.Println(mt)
-		m := message{msg, s.room, mt}
-		h.broadcast <- m
+		if mt == 1 {
+			m := message{msg, s.room, s.conn.id}
+			h.broadcast <- m
+		}
 	}
 }
 
@@ -101,7 +103,7 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	c := &connection{send: make(chan []byte, 256), ws: ws}
+	c := &connection{send: make(chan []byte, 256), ws: ws, id: randSeq(10)}
 	s := subscription{c, room}
 	h.register <- s
 	go s.writePump()

@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 )
 
 type message struct {
 	data []byte
 	room string
-	name int
+	name string
 }
 
 type subscription struct {
@@ -85,16 +86,28 @@ func (h *hub) run() {
 		case m := <-h.broadcast:
 			connections := h.rooms[m.room]
 			for c := range connections {
-				select {
-				case c.send <- m.data:
-				default:
-					close(c.send)
-					delete(connections, c)
-					if len(connections) == 0 {
-						delete(h.rooms, m.room)
+				if c.id != m.name {
+					select {
+					case c.send <- m.data:
+					default:
+						close(c.send)
+						delete(connections, c)
+						if len(connections) == 0 {
+							delete(h.rooms, m.room)
+						}
 					}
 				}
 			}
 		}
 	}
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
